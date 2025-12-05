@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.Builder;
 
 @Builder
-public record Email(
+public record EmailRequest(
         String from,
 
         @NotBlank

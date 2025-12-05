@@ -1,6 +1,6 @@
 package br.com.rodneybarreto.annunciator.controller;
 
-import br.com.rodneybarreto.annunciator.domain.dto.Email;
+import br.com.rodneybarreto.annunciator.domain.dto.EmailRequest;
 import br.com.rodneybarreto.annunciator.service.EmailService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,9 +21,9 @@ public class EmailController {
     private final EmailService emailService;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Void> send(@RequestBody @Valid Email email) {
-        log.info("Sending email");
-        emailService.send(email);
+    public ResponseEntity<Void> send(@RequestBody @Valid EmailRequest emailRequest) {
+        log.info("Sending e-mail...");
+        emailService.send(emailRequest);
         return ResponseEntity.ok().build();
     }
 

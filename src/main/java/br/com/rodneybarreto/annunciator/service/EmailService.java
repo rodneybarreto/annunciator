@@ -1,28 +1,38 @@
 package br.com.rodneybarreto.annunciator.service;
 
-import br.com.rodneybarreto.annunciator.domain.dto.Email;
+import br.com.rodneybarreto.annunciator.domain.dto.EmailRequest;
+import br.com.rodneybarreto.annunciator.domain.entity.EmailEntity;
+import br.com.rodneybarreto.annunciator.mapper.EmailMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.util.Optional;
-
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class EmailService {
 
-    private static final String DEFAULT_EMAIL_FROM = "noreply@annunciator.dev";
+    private final EmailMapper mapper;
+    private final JavaMailSender sender;
 
-    private final JavaMailSender javaMailSender;
+    public void send(EmailRequest emailRequest) {
+        EmailEntity emailEntity = mapper.toEntity(emailRequest);
 
-    public void send(Email email) {
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setFrom(Optional.ofNullable(email.from()).orElse(DEFAULT_EMAIL_FROM));
-        message.setTo(email.to());
-        message.setSubject(email.subject());
-        message.setText(email.content());
-        javaMailSender.send(message);
+        try {
+            var message = new SimpleMailMessage();
+            message.setFrom(emailEntity.getFrom());
+            message.setTo(emailEntity.getTo());
+            message.setSubject(emailEntity.getSubject());
+            message.setText(emailEntity.getContent());
+
+            sender.send(message);
+        }
+        catch (MailSendException e) {
+            log.error("Error to sent e-mail", e);
+        }
     }
 
 }
