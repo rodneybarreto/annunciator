@@ -2,14 +2,14 @@ package br.com.rodneybarreto.annunciator.domain.entity;
 
 import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class EmailEntity {
+public class EmailEntity implements Serializable {
 
     private String from;
     private String to;

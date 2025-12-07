@@ -9,7 +9,7 @@ spring:
     config:
         import: optional:file:.env[.properties]
     mail:
-        host: ${EMAIL_HOST:sandbox.smtp.mailtrap.io}
+        host: ${EMAIL_HOST:sandbox.smtp.mailtrap.i}
         port: ${EMAIL_PORT:2525}
         username: ${EMAIL_USERNAME}
         password: ${EMAIL_PASSWORD}
