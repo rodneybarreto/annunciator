@@ -39,7 +39,7 @@ public class EmailService {
             catch (MailSendException mse) {
                 log.error("Error to sent e-mail {}", mse.getMessage());
                 try {
-                    log.info("Storagging pending email in redis queue");
+                    log.info("Storaging pending email in redis queue");
                     jedis.lpush(QUEUE, objectMapper.writeValueAsString(emailEntity));
                 }
                 catch (JsonProcessingException jpe) {
