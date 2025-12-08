@@ -1,5 +1,6 @@
 package br.com.rodneybarreto.annunciator.service;
 
+import br.com.rodneybarreto.annunciator.configuration.properties.AppRedisProperty;
 import br.com.rodneybarreto.annunciator.domain.dto.EmailRequest;
 import br.com.rodneybarreto.annunciator.domain.entity.EmailEntity;
 import br.com.rodneybarreto.annunciator.mapper.EmailMapper;
@@ -18,15 +19,13 @@ import redis.clients.jedis.UnifiedJedis;
 @RequiredArgsConstructor
 public class EmailService {
 
-    private static final String REDIS_SERVER = "redis://localhost:6379";
-    private static final String QUEUE = "annunciator:email:sending-pending";
-
+    private final AppRedisProperty redis;
     private final EmailMapper mapper;
     private final JavaMailSender sender;
     private final ObjectMapper objectMapper;
 
     public void send(EmailRequest emailRequest) {
-        try (var jedis = new UnifiedJedis(REDIS_SERVER)) {
+        try (var jedis = new UnifiedJedis(redis.getServer())) {
             EmailEntity emailEntity = mapper.toEntity(emailRequest);
             try {
                 var message = new SimpleMailMessage();
@@ -40,7 +39,7 @@ public class EmailService {
                 log.error("Error to sent e-mail {}", mse.getMessage());
                 try {
                     log.info("Storaging pending email in redis queue");
-                    jedis.lpush(QUEUE, objectMapper.writeValueAsString(emailEntity));
+                    jedis.lpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
                 }
                 catch (JsonProcessingException jpe) {
                     log.error("Error to convert json string {}", jpe.getMessage());
