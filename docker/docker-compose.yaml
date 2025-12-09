@@ -4,3 +4,7 @@ services:
         restart: always
         ports:
             - "6379:6379"
+        volumes:
+            - ${ANNUNCIATOR_VOLUME}:/data
+        command: --save 60 1 --loglevel warning
+
