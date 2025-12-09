@@ -39,7 +39,7 @@ public class EmailService {
 
         future.exceptionally(throwable -> {
             log.error("Error to sent email {}", throwable.getMessage());
-            redisEventService.save(emailEntity);
+            redisEventService.addToQueue(emailEntity);
             return null;
         });
     }
