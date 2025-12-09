@@ -8,11 +8,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.mail.MailSendException;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.UnifiedJedis;
+
+import java.time.LocalDateTime;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 @Service
@@ -25,27 +27,32 @@ public class EmailService {
     private final ObjectMapper objectMapper;
 
     public void send(EmailRequest emailRequest) {
-        try (var jedis = new UnifiedJedis(redis.getServer())) {
-            EmailEntity emailEntity = mapper.toEntity(emailRequest);
-            try {
-                var message = new SimpleMailMessage();
-                message.setFrom(emailEntity.getFrom());
-                message.setTo(emailEntity.getTo());
-                message.setSubject(emailEntity.getSubject());
-                message.setText(emailEntity.getContent());
-                sender.send(message);
+        EmailEntity emailEntity = mapper.toEntity(emailRequest);
+
+        CompletableFuture<SimpleMailMessage> future = CompletableFuture.supplyAsync(() -> {
+            var message = new SimpleMailMessage();
+            message.setFrom(emailEntity.getFrom());
+            message.setTo(emailEntity.getTo());
+            message.setSubject(emailEntity.getSubject());
+            message.setText(emailEntity.getContent());
+            log.info("Sending email...");
+            sender.send(message);
+            return message;
+        });
+
+        future.thenAccept(message -> emailEntity.setSentDate(LocalDateTime.now()));
+
+        future.exceptionally(throwable -> {
+            log.error("Error to sent email {}", throwable.getMessage());
+            try (var jedis = new UnifiedJedis(redis.getServer())) {
+                log.info("Storaging pending email in redis queue");
+                emailEntity.setPendingDate(LocalDateTime.now());
+                jedis.lpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
+            } catch (JsonProcessingException jpe) {
+                log.error("Error to convert json string {}", jpe.getMessage());
             }
-            catch (MailSendException mse) {
-                log.error("Error to sent e-mail {}", mse.getMessage());
-                try {
-                    log.info("Storaging pending email in redis queue");
-                    jedis.lpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
-                }
-                catch (JsonProcessingException jpe) {
-                    log.error("Error to convert json string {}", jpe.getMessage());
-                }
-            }
-        }
+            return null;
+        });
     }
 
 }

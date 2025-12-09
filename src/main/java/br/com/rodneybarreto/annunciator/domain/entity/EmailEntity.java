@@ -16,5 +16,6 @@ public class EmailEntity implements Serializable {
     private String subject;
     private String content;
     private LocalDateTime sentDate;
+    private LocalDateTime pendingDate;
 
 }

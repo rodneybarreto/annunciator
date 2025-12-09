@@ -66,12 +66,6 @@
             <artifactId>jedis</artifactId>
             <version>7.1.0</version>
         </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-            <version>2.19.4</version>
-        </dependency>
     </dependencies>
 
     <build>

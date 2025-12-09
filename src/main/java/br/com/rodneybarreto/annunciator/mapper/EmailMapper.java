@@ -4,7 +4,6 @@ import br.com.rodneybarreto.annunciator.domain.dto.EmailRequest;
 import br.com.rodneybarreto.annunciator.domain.entity.EmailEntity;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Component
@@ -18,7 +17,6 @@ public class EmailMapper {
                 .to(emailRequest.to())
                 .subject(emailRequest.subject())
                 .content(emailRequest.content())
-                .sentDate(LocalDateTime.now())
                 .build();
     }
 
