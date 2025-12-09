@@ -35,7 +35,7 @@ public class EmailService {
             message.setTo(emailEntity.getTo());
             message.setSubject(emailEntity.getSubject());
             message.setText(emailEntity.getContent());
-            log.info("Sending email...");
+            log.info("Sending email");
             sender.send(message);
             return message;
         });
@@ -44,11 +44,15 @@ public class EmailService {
 
         future.exceptionally(throwable -> {
             log.error("Error to sent email {}", throwable.getMessage());
+
             try (var jedis = new UnifiedJedis(redis.getServer())) {
-                log.info("Storaging pending email in redis queue");
                 emailEntity.setPendingDate(LocalDateTime.now());
-                jedis.lpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
-            } catch (JsonProcessingException jpe) {
+
+                log.info("Storaging pending email in redis queue");
+                long count = jedis.lpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
+                log.info("Queue [{}] has [{}] email(s) pending", redis.getQueue(), count);
+            }
+            catch (JsonProcessingException jpe) {
                 log.error("Error to convert json string {}", jpe.getMessage());
             }
             return null;
