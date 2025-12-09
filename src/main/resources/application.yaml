@@ -2,6 +2,8 @@ server:
     port: ${SERVER_PORT:8080}
     servlet:
         context-path: /annunciator
+    error:
+        include-stacktrace: never
 
 spring:
     application:
