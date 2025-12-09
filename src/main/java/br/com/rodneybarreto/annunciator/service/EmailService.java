@@ -1,17 +1,13 @@
 package br.com.rodneybarreto.annunciator.service;
 
-import br.com.rodneybarreto.annunciator.configuration.properties.AppRedisProperty;
 import br.com.rodneybarreto.annunciator.domain.dto.EmailRequest;
 import br.com.rodneybarreto.annunciator.domain.entity.EmailEntity;
 import br.com.rodneybarreto.annunciator.mapper.EmailMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-import redis.clients.jedis.UnifiedJedis;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
@@ -21,10 +17,9 @@ import java.util.concurrent.CompletableFuture;
 @RequiredArgsConstructor
 public class EmailService {
 
-    private final AppRedisProperty redis;
     private final EmailMapper mapper;
     private final JavaMailSender sender;
-    private final ObjectMapper objectMapper;
+    private final RedisEventService redisEventService;
 
     public void send(EmailRequest emailRequest) {
         EmailEntity emailEntity = mapper.toEntity(emailRequest);
@@ -44,17 +39,7 @@ public class EmailService {
 
         future.exceptionally(throwable -> {
             log.error("Error to sent email {}", throwable.getMessage());
-
-            try (var jedis = new UnifiedJedis(redis.getServer())) {
-                emailEntity.setPendingDate(LocalDateTime.now());
-
-                log.info("Storaging pending email in redis queue");
-                long count = jedis.lpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
-                log.info("Queue [{}] has [{}] email(s) pending", redis.getQueue(), count);
-            }
-            catch (JsonProcessingException jpe) {
-                log.error("Error to convert json string {}", jpe.getMessage());
-            }
+            redisEventService.save(emailEntity);
             return null;
         });
     }
