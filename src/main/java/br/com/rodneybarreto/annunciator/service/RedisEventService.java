@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.UnifiedJedis;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Slf4j
 @Service
@@ -23,7 +22,6 @@ public class RedisEventService {
     public void addToQueue(EmailEntity emailEntity) {
         try (var jedis = new UnifiedJedis(redis.getServer())) {
             emailEntity.setPendingDate(LocalDateTime.now());
-
             log.info("Storaging pending email in redis queue");
             long count = jedis.rpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
             log.info("Queue [{}] has [{}] email(s) pending", redis.getQueue(), count);
@@ -36,17 +34,16 @@ public class RedisEventService {
     public void getFromQueue() {
         try (var jedis = new UnifiedJedis(redis.getServer())) {
             int timeout = 30;
-            List<String> messages = jedis.blpop(timeout, redis.getQueue());
-
-            while (messages != null) {
-                String jsonStr = messages.get(1);
-                EmailEntity emailEntity = objectMapper.readValue(jsonStr, EmailEntity.class);
-                log.info("Processing pending email {}", emailEntity.toString());
-                messages = jedis.blpop(timeout, redis.getQueue());
-            }
-        }
-        catch (JsonProcessingException e) {
-            log.error("Error to processing json string {}", e.getMessage());
+            jedis.blpop(timeout, redis.getQueue()).stream().iterator().forEachRemaining(message -> {
+                EmailEntity emailEntity = null;
+                try {
+                    emailEntity = objectMapper.readValue(message, EmailEntity.class);
+                    log.info("Processing pending email {}", emailEntity.toString());
+                }
+                catch (JsonProcessingException e) {
+                    log.error("Error to processing json string {}", e.getMessage());
+                }
+            });
         }
     }
 
