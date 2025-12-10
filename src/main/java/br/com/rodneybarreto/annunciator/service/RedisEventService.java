@@ -35,9 +35,10 @@ public class RedisEventService {
     public void getFromQueue() {
         try (var jedis = new UnifiedJedis(redis.getServer())) {
             int timeout = 30;
+            EmailEntity emailEntity = null;
+
             List<String> messages = jedis.blpop(timeout, redis.getQueue());
             while (messages != null) {
-                EmailEntity emailEntity = null;
                 String message = messages.get(1);
                 try {
                     emailEntity = objectMapper.readValue(message, EmailEntity.class);
