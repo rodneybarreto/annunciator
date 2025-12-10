@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import redis.clients.jedis.UnifiedJedis;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -34,16 +35,19 @@ public class RedisEventService {
     public void getFromQueue() {
         try (var jedis = new UnifiedJedis(redis.getServer())) {
             int timeout = 30;
-            jedis.blpop(timeout, redis.getQueue()).stream().iterator().forEachRemaining(message -> {
+            List<String> messages = jedis.blpop(timeout, redis.getQueue());
+            while (messages != null) {
                 EmailEntity emailEntity = null;
+                String message = messages.get(1);
                 try {
                     emailEntity = objectMapper.readValue(message, EmailEntity.class);
                     log.info("Processing pending email {}", emailEntity.toString());
+                    messages = jedis.blpop(timeout, redis.getQueue());
                 }
                 catch (JsonProcessingException e) {
                     log.error("Error to processing json string {}", e.getMessage());
                 }
-            });
+            }
         }
     }
 
