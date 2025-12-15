@@ -21,6 +21,9 @@ spring:
                     auth: ${EMAIL_SMTP_AUTH:true}
                     starttls:
                         enable: ${EMAIL_SMTP_STARTTLS_ENABLE:true}
+    threads:
+        virtual:
+            enabled: true
 
 app:
     redis:

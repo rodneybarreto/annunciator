@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @Service
@@ -20,6 +22,7 @@ public class EmailService {
     private final EmailMapper mapper;
     private final JavaMailSender sender;
     private final RedisEventService redisEventService;
+    private final Executor executor = Executors.newVirtualThreadPerTaskExecutor();
 
     public void send(EmailRequest emailRequest) {
         EmailEntity emailEntity = mapper.toEntity(emailRequest);
@@ -33,7 +36,7 @@ public class EmailService {
             log.info("Sending email");
             sender.send(message);
             return message;
-        });
+        }, executor);
 
         future.thenAccept(message -> emailEntity.setSentDate(LocalDateTime.now()));
 
