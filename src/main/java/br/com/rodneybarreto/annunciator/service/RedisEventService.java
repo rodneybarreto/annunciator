@@ -17,15 +17,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RedisEventService {
 
-    private final AppRedisProperty redis;
+    private final AppRedisProperty redisProps;
     private final ObjectMapper objectMapper;
 
     public void addToQueue(EmailEntity emailEntity) {
-        try (var jedis = new UnifiedJedis(redis.getServer())) {
+        try (var jedis = new UnifiedJedis(redisProps.getServer())) {
             emailEntity.setPendingDate(LocalDateTime.now());
-            log.info("Storaging pending email in redis queue");
-            long count = jedis.rpush(redis.getQueue(), objectMapper.writeValueAsString(emailEntity));
-            log.info("Queue [{}] has [{}] email(s) pending", redis.getQueue(), count);
+            log.info("Storaging pending email in redisProps queue");
+            long count = jedis.rpush(redisProps.getQueue(), objectMapper.writeValueAsString(emailEntity));
+            log.info("Queue [{}] has [{}] email(s) pending", redisProps.getQueue(), count);
         }
         catch (JsonProcessingException jpe) {
             log.error("Error to convert json string {}", jpe.getMessage());
@@ -33,17 +33,17 @@ public class RedisEventService {
     }
 
     public void getFromQueue() {
-        try (var jedis = new UnifiedJedis(redis.getServer())) {
+        try (var jedis = new UnifiedJedis(redisProps.getServer())) {
             int timeout = 30;
             EmailEntity emailEntity = null;
 
-            List<String> messages = jedis.blpop(timeout, redis.getQueue());
+            List<String> messages = jedis.blpop(timeout, redisProps.getQueue());
             while (messages != null) {
                 String message = messages.get(1);
                 try {
                     emailEntity = objectMapper.readValue(message, EmailEntity.class);
                     log.info("Processing pending email {}", emailEntity.toString());
-                    messages = jedis.blpop(timeout, redis.getQueue());
+                    messages = jedis.blpop(timeout, redisProps.getQueue());
                 }
                 catch (JsonProcessingException e) {
                     log.error("Error to processing json string {}", e.getMessage());
