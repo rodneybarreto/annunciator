@@ -12,7 +12,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @Configuration
 @ConfigurationProperties(prefix = "app.redis")
-public class AppRedisProperty {
+public class AppRedisProperties {
 
     @NotBlank
     private String server;

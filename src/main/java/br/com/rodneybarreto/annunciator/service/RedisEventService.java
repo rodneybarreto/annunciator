@@ -1,6 +1,6 @@
 package br.com.rodneybarreto.annunciator.service;
 
-import br.com.rodneybarreto.annunciator.configuration.properties.AppRedisProperty;
+import br.com.rodneybarreto.annunciator.configuration.properties.AppRedisProperties;
 import br.com.rodneybarreto.annunciator.domain.entity.EmailEntity;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RedisEventService {
 
-    private final AppRedisProperty redisProps;
+    private final AppRedisProperties redisProps;
     private final ObjectMapper objectMapper;
 
     public void addToQueue(EmailEntity emailEntity) {
