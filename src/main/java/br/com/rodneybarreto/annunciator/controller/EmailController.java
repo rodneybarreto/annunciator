@@ -19,7 +19,13 @@ public class EmailController {
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Void> send(@RequestBody @Valid EmailRequest emailRequest) {
-        emailService.send(emailRequest);
+        emailService.sendMail(emailRequest);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/retry", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Void> sendRetry(@RequestBody @Valid EmailRequest emailRequest) {
+        emailService.sendMailWithRetry(emailRequest);
         return ResponseEntity.ok().build();
     }
 

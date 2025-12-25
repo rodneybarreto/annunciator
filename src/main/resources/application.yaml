@@ -29,3 +29,10 @@ app:
   redis:
     server: ${REDIS_SERVER:redis://localhost:6379}
     queue: ${REDIS_QUEUE:annunciator:email:sending-pending}
+
+service:
+  retry:
+    max-attempts: 3
+    initial-delay: 1000
+    max-delay: 5000
+    multiplier: 2.0
