@@ -42,8 +42,12 @@ public class EmailService {
 
     @Retryable(
             retryFor = { MailSendException.class },
-            maxAttemptsExpression = "3",
-            backoff = @Backoff(delayExpression = "1000", maxDelayExpression = "5000", multiplierExpression = "2.0")
+            maxAttemptsExpression = "${service.retry.max-attempts}",
+            backoff = @Backoff(
+                    delayExpression = "${service.retry.initial-delay}",
+                    maxDelayExpression = "${service.retry.max-delay}",
+                    multiplierExpression = "${service.retry.multiplier}"
+            )
     )
     public void sendMailWithRetry(EmailRequest emailRequest) {
         EmailEntity emailEntity = mapper.toEntity(emailRequest);
