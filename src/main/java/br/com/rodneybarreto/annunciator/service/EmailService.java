@@ -33,8 +33,8 @@ public class EmailService {
         CompletableFuture
                 .supplyAsync(() -> this.send(emailEntity), executor)
                 .thenAccept(message -> emailEntity.setSentDate(LocalDateTime.now()))
-                .exceptionally(throwable -> {
-                    log.error("Error to sent email {}", throwable.getMessage());
+                .exceptionally(ex -> {
+                    log.error("Error to sent async email {}", ex.getMessage());
                     redisEventService.addToQueue(emailEntity);
                     return null;
                 });
@@ -55,8 +55,9 @@ public class EmailService {
     }
 
     @Recover
-    public void fallback(Exception exception, String url, Object request) {
-        log.error("Error to sent email {}", exception.getMessage());
+    public void fallback(Exception exception, EmailEntity emailEntity) {
+        log.error("Error to sent retryable email {}", exception.getMessage());
+        redisEventService.addToQueue(emailEntity);
     }
 
     private SimpleMailMessage send(EmailEntity emailEntity) {

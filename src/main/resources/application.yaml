@@ -34,5 +34,5 @@ service:
   retry:
     max-attempts: 3
     initial-delay: 1000
-    max-delay: 5000
+    max-delay: 10000
     multiplier: 2.0
